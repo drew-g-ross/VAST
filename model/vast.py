@@ -76,7 +76,30 @@ class VAST(MMGeneralModule):
 
         self.text_masker = TokenMasker(mask_token = self.multimodal_encoder.tokenizer.mask_token_id, range_start=106, range_end = 30522)
 
-        
+    def get_vid_embeddings(self,vision_pixels):
+        # vision_pixels should be 5 dimensional: b,n,3,h,w = vision_pixels.shape
+        # if only one ex, make sure b=1
+        vision_output = self.forward_vision_encoder(vision_pixels)
+        vision_output_pooled = self.pool_vision_for_contra(vision_output)
+        feat_v = self.contra_head_v(vision_output_pooled)
+        feat_v = F.normalize(feat_v,dim=-1)
+        return feat_v
+    
+    def get_cap_embeddings(self,raw_captions):
+        caption_tokens = self.multimodal_encoder.tokenizer(raw_captions,
+                                                    padding="max_length",
+                                                    truncation=True,
+                                                    max_length=self.max_caption_len,
+                                                    return_tensors="pt").to(torch.device('cuda'))
+        input_ids = caption_tokens.input_ids
+        attention_mask = caption_tokens.attention_mask
+        caption_output = self.multimodal_encoder.bert(input_ids = input_ids,
+                                        attention_mask = attention_mask).last_hidden_state
+
+        caption_output_pooled = self.pool_text_for_contra(caption_output)
+        feat_t = self.contra_head_t(caption_output_pooled) 
+        feat_t = F.normalize(feat_t,dim=-1)
+        return feat_t
 
     def batch_get(self, batch, key):
         if key in batch:
