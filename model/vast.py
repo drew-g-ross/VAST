@@ -12,6 +12,9 @@ from .general_module import TokenMasker, MMGeneralModule, Contra_head, Match_hea
 from utils.distributed import all_gather_with_grad, concat_all_gather, all_gather_list
 from torch.nn import LayerNorm as LayerNorm
 from easydict import EasyDict as edict
+import decord
+from utils.tool import split
+from torchvision.transforms.transforms import *
 
 class VAST(MMGeneralModule):
     """ VLP pretraining """
@@ -76,9 +79,34 @@ class VAST(MMGeneralModule):
 
         self.text_masker = TokenMasker(mask_token = self.multimodal_encoder.tokenizer.mask_token_id, range_start=106, range_end = 30522)
 
-    def get_vid_embeddings(self,vision_pixels):
+    def _get_transform(self, mean = [0.48145466, 0.4578275, 0.40821073], std  = [0.26862954, 0.26130258, 0.27577711], resolution = 224):
+        """Taken from vision_mapper class"""
+        return Compose([
+                        Resize((resolution,resolution)),
+                        Normalize(mean,std)])
+    
+    def _get_vision_pixels(self, video_path):
+        """Returns tensor of shape b,n,3,h,w which is generally 1,16,3,224,224
+        of the pixels of the raw_video at video_path. 
+        Taken from vision_mapper read method (under 'raw_video' if statement)"""
+        sample_num = 16 # either 8 or 16
+        container = decord.VideoReader(video_path)     
+        frames_ids = list(range(len(container)))
+        frames_splited = split(frames_ids, sample_num)
+        sample_idx = [i[(len(i)+1)//2-1] for i in frames_splited] 
+        frames = container.get_batch(sample_idx).asnumpy()
+        vision_pixels = torch.from_numpy(frames.transpose(0,3,1,2)/255.0)  ### nX3xHxW
+        transform_fn = self._get_transform()
+        vision_pixels = transform_fn(vision_pixels)    
+
+        return vision_pixels.unsqueeze(0).to(torch.float).to(torch.device('cuda'))
+    
+    def get_vid_embeddings(self,video_path):
+        """Returns tensor of shape 1,512 of embeddings for this video.
+        Taken from batch_get 'feat_v'"""
         # vision_pixels should be 5 dimensional: b,n,3,h,w = vision_pixels.shape
         # if only one ex, make sure b=1
+        vision_pixels = self._get_vision_pixels(video_path)
         vision_output = self.forward_vision_encoder(vision_pixels)
         vision_output_pooled = self.pool_vision_for_contra(vision_output)
         feat_v = self.contra_head_v(vision_output_pooled)
@@ -86,6 +114,8 @@ class VAST(MMGeneralModule):
         return feat_v
     
     def get_cap_embeddings(self,raw_captions):
+        """Returns tensor of shape 1,512 of embeddings for this caption.
+        Taken from batch_get 'feat_t_vision_caption'"""
         caption_tokens = self.multimodal_encoder.tokenizer(raw_captions,
                                                     padding="max_length",
                                                     truncation=True,
