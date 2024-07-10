@@ -111,7 +111,7 @@ class VAST(MMGeneralModule):
         vision_output_pooled = self.pool_vision_for_contra(vision_output)
         feat_v = self.contra_head_v(vision_output_pooled)
         feat_v = F.normalize(feat_v,dim=-1)
-        return feat_v
+        return feat_v.squeeze().tolist()
     
     def get_cap_embeddings(self,raw_captions):
         """Returns tensor of shape 1,512 of embeddings for this caption.
@@ -129,7 +129,7 @@ class VAST(MMGeneralModule):
         caption_output_pooled = self.pool_text_for_contra(caption_output)
         feat_t = self.contra_head_t(caption_output_pooled) 
         feat_t = F.normalize(feat_t,dim=-1)
-        return feat_t
+        return feat_t.squeeze().tolist()
 
     def batch_get(self, batch, key):
         if key in batch:
