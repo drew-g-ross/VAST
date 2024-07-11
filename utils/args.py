@@ -183,7 +183,6 @@ def logging_cfgs(opts):
     with open(os.path.join(opts.run_cfg.output_dir, 'log', 'hps.json'), 'w') as writer:
         json.dump(vars(opts), writer, indent=4)
 
-    n_gpu = dist.get_world_size()
 
     LOGGER.info('==='*6+'model_configs'+'==='*6+'\n')
     for k,v in opts.model_cfg.items():

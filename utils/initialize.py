@@ -12,8 +12,12 @@ def initialize(opts):
     os.makedirs(os.path.join(opts.run_cfg.output_dir, 'ckpt'), exist_ok=True)
     
     local_rank = opts.local_rank
-    torch.cuda.set_device(local_rank)
-    dist.init_process_group(backend='nccl') 
+    #local_rank = 0
+    if torch.cuda.is_available():
+        torch.cuda.set_device(local_rank)
+        dist.init_process_group(backend='nccl')
+    else:
+        dist.init_process_group(backend='gloo')
     if opts.run_cfg.gradient_accumulation_steps < 1:
         raise ValueError("Invalid gradient_accumulation_steps parameter: {}, "
                          "should be >= 1".format(
@@ -21,7 +25,7 @@ def initialize(opts):
     set_random_seed(opts.run_cfg.seed)
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.enabled = True
-    if dist.get_rank() == 0:
+    if torch.cuda.is_available() and dist.get_rank() == 0:
         # TB_LOGGER.create(os.path.join(opts.output_dir, 'log'))
         add_log_to_file(os.path.join(opts.run_cfg.output_dir, 'log', 'log.txt'))
     else:

@@ -62,8 +62,7 @@ def build_model_fn(pretrain_dir):
      
     # put on gpu
     local_rank = 0
-    device = torch.device("cuda", local_rank)
-    model.to(device)
+    model.to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
 
     return model
 
@@ -101,8 +100,7 @@ def build_model(args):
      
 
     local_rank = args.local_rank
-    device = torch.device("cuda", local_rank)
-    model.to(device)
+    model.to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     if  args.run_cfg.use_ddp:
         model = DDP_modify(model, device_ids=[local_rank], output_device=local_rank, find_unused_parameters=True)
     else:

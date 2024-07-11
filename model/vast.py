@@ -99,7 +99,7 @@ class VAST(MMGeneralModule):
         transform_fn = self._get_transform()
         vision_pixels = transform_fn(vision_pixels)    
 
-        return vision_pixels.unsqueeze(0).to(torch.float).to(torch.device('cuda'))
+        return vision_pixels.unsqueeze(0).to(torch.float).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     
     def get_vid_embeddings(self,video_path):
         """Returns tensor of shape 1,512 of embeddings for this video.
@@ -120,7 +120,7 @@ class VAST(MMGeneralModule):
                                                     padding="max_length",
                                                     truncation=True,
                                                     max_length=self.max_caption_len,
-                                                    return_tensors="pt").to(torch.device('cuda'))
+                                                    return_tensors="pt").to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
         input_ids = caption_tokens.input_ids
         attention_mask = caption_tokens.attention_mask
         caption_output = self.multimodal_encoder.bert(input_ids = input_ids,
@@ -142,8 +142,8 @@ class VAST(MMGeneralModule):
                                                     padding="max_length",
                                                     truncation=True,
                                                     max_length=self.max_caption_len,
-                                                    return_tensors="pt").to(torch.device('cuda'))
-         
+                                                    return_tensors="pt").to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
+        
             batch[key] = caption_tokens
         
         elif key == 'subtitle_tokens':
@@ -153,7 +153,7 @@ class VAST(MMGeneralModule):
                                                     truncation=True,
                                                     max_length=self.max_subtitle_len,
                                                     return_tensors="pt")
-            subtitle_tokens = subtitle_tokens.to(torch.device('cuda'))
+            subtitle_tokens = subtitle_tokens.to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
             batch[key] = subtitle_tokens
                                         
 
@@ -164,7 +164,7 @@ class VAST(MMGeneralModule):
                                                     max_length=self.max_caption_len,
                                                     return_tensors="pt")
 
-            caption_tokens = caption_tokens.to(torch.device('cuda'))
+            caption_tokens = caption_tokens.to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
             batch[key] = caption_tokens
 
 
@@ -176,7 +176,7 @@ class VAST(MMGeneralModule):
                                                     max_length=self.max_caption_len,
                                                     return_tensors="pt")
 
-            caption_tokens = caption_tokens.to(torch.device('cuda'))
+            caption_tokens = caption_tokens.to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
             batch[key] = caption_tokens
 
         elif key == 'omni_caption_tokens':
@@ -186,7 +186,7 @@ class VAST(MMGeneralModule):
                                                     max_length=self.max_omni_caption_len,
                                                     return_tensors="pt")
 
-            caption_tokens = caption_tokens.to(torch.device('cuda'))
+            caption_tokens = caption_tokens.to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
             batch[key] = caption_tokens
 
 
@@ -504,7 +504,7 @@ class VAST(MMGeneralModule):
                                             encoder_hidden_states=condition_feats).last_hidden_state
                 batch_size = condition_feats_neg.shape[0]
                 logits = self.itm_head(output[:,0].half())
-                ground_truth = torch.zeros(batch_size*3).long().cuda()
+                ground_truth = torch.zeros(batch_size*3).long().to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
                 ground_truth[:batch_size] = 1
                 loss = F.cross_entropy(logits,ground_truth)
                 loss_itm.append(self.itm_ratio * loss)
@@ -574,7 +574,7 @@ class VAST(MMGeneralModule):
                 if self.config.captioner_mode:
                     batch_size *=self.config.generate_nums
 
-                init_input_ids = torch.ones(batch_size, 1).long().cuda().fill_(self.multimodal_encoder.tokenizer.bos_token_id)
+                init_input_ids = torch.ones(batch_size, 1).long().to(torch.device('cuda') if torch.cuda.is_available() else 'cpu').fill_(self.multimodal_encoder.tokenizer.bos_token_id)
                 init_attention_mask = init_input_ids.new_ones(batch_size, 1, 1)
                 
                 if self.config.captioner_mode:
@@ -621,7 +621,7 @@ class VAST(MMGeneralModule):
                                                             padding="max_length",
                                                             truncation=True,
                                                             max_length=self.max_caption_len,
-                                                            return_tensors="pt").to(torch.device('cuda'))
+                                                            return_tensors="pt").to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
 
         question_tokens_ids, question_tokens_mask = question_tokens.input_ids, question_tokens.attention_mask
 
@@ -636,12 +636,12 @@ class VAST(MMGeneralModule):
                                                     max_length=10,
                                                     return_tensors="pt")
     
-            answer_tokens = answer_tokens.to(torch.device('cuda'))
+            answer_tokens = answer_tokens.to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
             answer_tokens_ids, answer_tokens_mask = answer_tokens.input_ids, answer_tokens.attention_mask
             input_ids, txt_labels = self.text_masker(answer_tokens_ids, 0.99)
             input_ids = torch.cat((question_tokens_ids,input_ids),dim=1)
             attention_mask = torch.cat((question_tokens_mask,answer_tokens_mask),dim=1)
-            dummy_labels = (-100*torch.ones_like(question_tokens_ids)).cuda()
+            dummy_labels = (-100*torch.ones_like(question_tokens_ids)).to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
             txt_labels = torch.cat((dummy_labels,txt_labels),dim=1)
 
             #### part-causal attention mask
@@ -668,7 +668,7 @@ class VAST(MMGeneralModule):
         else:
             evaluation_dict = {} 
             batch_size = sum(num_question)
-            init_input_ids = torch.ones(batch_size, 1).long().cuda().fill_(self.multimodal_encoder.tokenizer.bos_token_id)
+            init_input_ids = torch.ones(batch_size, 1).long().to(torch.device('cuda') if torch.cuda.is_available() else 'cpu').fill_(self.multimodal_encoder.tokenizer.bos_token_id)
             init_input_ids = torch.cat((question_tokens['input_ids'],init_input_ids),dim=1)
             question_len = question_tokens['input_ids'].shape[1]
             seq_len = init_input_ids.shape[1]
@@ -819,7 +819,7 @@ class VAST(MMGeneralModule):
                                             encoder_hidden_states=condition_feats).last_hidden_state
                 batch_size = condition_feats_neg.shape[0]
                 logits = self.itm_head(output[:,0].half())
-                ground_truth = torch.zeros(batch_size*3).long().cuda()
+                ground_truth = torch.zeros(batch_size*3).long().to(torch.device('cuda') if torch.cuda.is_available() else 'cpu')
                 ground_truth[:batch_size] = 1
                 loss = F.cross_entropy(logits,ground_truth)
                 loss_itm.append(self.itm_ratio * loss)

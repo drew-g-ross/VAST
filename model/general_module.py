@@ -91,8 +91,8 @@ class TokenMasker(nn.Module):
                     labels[i][j] = src_token
 
 
-        tokens =torch.from_numpy(tokens).long().cuda()
-        labels =torch.from_numpy(labels).long().cuda()
+        tokens =torch.from_numpy(tokens).long().to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+        labels =torch.from_numpy(labels).long().to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
         
         return tokens, labels
 

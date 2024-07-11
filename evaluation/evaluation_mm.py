@@ -185,7 +185,19 @@ def evaluate_ret(model, tasks, val_loader, global_step):
 
     for i, batch in enumerate(val_loader):
         batch = edict(batch)
-        evaluation_dict= model(batch, tasks, compute_loss=False)
+        evaluation_dict= model(batch, tasks, compute_loss=False)   
+
+        print(f"STARTING EVAL OF NEW BATCH OF SIZE {len(batch['ids_txt'])}")
+        # for key in evaluation_dict:
+        #     if type(evaluation_dict[key]) == torch.Tensor and key != 'input_ids' and key != 'attention_mask':
+        #         print(f"moving {key} to cpu")
+        #         evaluation_dict[key] = evaluation_dict[key].cpu()
+        for key in batch:
+            if type(batch[key]) == torch.Tensor:
+                print(f"moving {key} to cpu")
+                batch[key] = batch[key].cpu()
+        torch.cuda.empty_cache()
+
         feat_t.append(evaluation_dict['feat_t'])
       
         input_ids.append(evaluation_dict['input_ids'])
@@ -252,7 +264,8 @@ def evaluate_ret(model, tasks, val_loader, global_step):
 
 def refine_score_matrix(condition_feats, input_ids, attention_mask, score_matrix_t_cond, model, itm_rerank_num, direction='forward'):
 
-    top_k = itm_rerank_num
+    # do min to prevent out of range when experimenting with set < 50
+    top_k = min(input_ids.shape[0], itm_rerank_num)
     if direction=='forward':
         idxs = score_matrix_t_cond.topk(top_k,dim=1)[1]
     else:

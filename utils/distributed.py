@@ -72,9 +72,9 @@ def _encode(enc, max_size, use_max_size=False):
     enc_byte = max(math.floor(math.log(max_size, 256)+1), 1)
     if use_max_size:
         # this is used for broadcasting
-        buffer_ = torch.cuda.ByteTensor(max_size+enc_byte)
+        buffer_ = torch.cuda.ByteTensor(max_size+enc_byte) if torch.cuda.is_available() else torch.ByteTensor(max_size+enc_byte)
     else:
-        buffer_ = torch.cuda.ByteTensor(enc_size+enc_byte)
+        buffer_ = torch.cuda.ByteTensor(enc_size+enc_byte) if torch.cuda.is_available() else torch.ByteTensor(enc_size+enc_byte)
     remainder = enc_size
     for i in range(enc_byte):
         base = 256 ** (enc_byte-i-1)
@@ -100,7 +100,7 @@ def all_gather_list(data):
     enc = pickle.dumps(data)
 
     enc_size = len(enc)
-    max_size = ddp_allgather(torch.tensor([enc_size]).cuda()).max().item()
+    max_size = ddp_allgather(torch.tensor([enc_size]).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))).max().item()
     in_buffer, enc_byte = _encode(enc, max_size)
 
     out_buffer = ddp_allgather(in_buffer[:enc_byte+enc_size])
@@ -118,7 +118,7 @@ def any_broadcast(data, root_rank):
     """broadcast arbitrary data from root_rank to all nodes."""
     enc = pickle.dumps(data)
 
-    max_size = ddp_allgather(torch.tensor([len(enc)]).cuda()).max().item()
+    max_size = ddp_allgather(torch.tensor([len(enc)]).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))).max().item()
     buffer_, enc_byte = _encode(enc, max_size, use_max_size=True)
 
     dist.broadcast(buffer_, root_rank)
@@ -131,8 +131,8 @@ def any_broadcast(data, root_rank):
 
 ######  with different batch_size ~
 def ddp_allgather(input):
-    tmp_input = input.cuda()
-    size = torch.tensor(tmp_input.shape[0]).cuda()
+    tmp_input = input.to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+    size = torch.tensor(tmp_input.shape[0]).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     size_list = [torch.zeros_like(size) for i in range(dist.get_world_size())]
     dist.all_gather(size_list, size)
     max_size = max(size_list).item()
