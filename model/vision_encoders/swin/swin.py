@@ -737,7 +737,7 @@ class SwinTransformer(nn.Module):
 
 if __name__ == '__main__':
 
-    config = get_config('../pretrained_weights/swin_large_patch4_window7_224_22k.yaml')
+    config = get_config('./tmp/vast/pretrained_weights/swin_large_patch4_window7_224_22k.yaml')
     model_type = config.MODEL.TYPE
 
     # accelerate layernorm
@@ -774,7 +774,7 @@ if __name__ == '__main__':
                                 use_checkpoint=config.TRAIN.USE_CHECKPOINT,
                                 fused_window_process=config.FUSED_WINDOW_PROCESS)
     
-    swin_weights = torch.load('../pretrained_weights/swin_large_patch4_window7_224_22k.pth')['model']
+    swin_weights = torch.load('./tmp/vast/pretrained_weights/swin_large_patch4_window7_224_22k.pth')['model']
     missing_keys,unexpected_keys = model.load_state_dict(swin_weights,strict=False)
     print(unexpected_keys)
 

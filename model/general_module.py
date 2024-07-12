@@ -233,7 +233,7 @@ class MMGeneralModule(nn.Module):
         time_stride = 1
         self.vision_encoder = SwinTransformer3D(time_stride = 1, embed_dim=128, num_heads=[4, 8, 16, 32],checkpointing=self.config.checkpointing)
         self.vision_dim = 1024 
-        videoswin_weight = torch.load('./pretrained_weights/videoswin_base_k600_22k.pth',map_location='cpu')['state_dict']
+        videoswin_weight = torch.load('/tmp/vast/pretrained_weights/videoswin_base_k600_22k.pth',map_location='cpu')['state_dict']
         videoswin_weight = {k.replace('backbone.',''):v for k,v in videoswin_weight.items()}
         missing_keys, unexpected_keys = self.vision_encoder.load_state_dict(videoswin_weight,strict=False)
         del(videoswin_weight)
@@ -245,7 +245,7 @@ class MMGeneralModule(nn.Module):
     def load_beats_model(self):
 
         from .audio_encoders.beats.beats import  BEATsConfig, BEATs
-        checkpoint = torch.load('./pretrained_weights/beats/BEATs_iter3_plus_AS2M.pt')
+        checkpoint = torch.load('/tmp/vast/pretrained_weights/beats/BEATs_iter3_plus_AS2M.pt')
         cfg = BEATsConfig(checkpoint['cfg'])
 
         self.audio_encoder = BEATs(cfg, checkpointing = self.config.checkpointing)
@@ -271,7 +271,7 @@ class MMGeneralModule(nn.Module):
         self.audio_encoder = TransformerEncoder(cfg, mode='prenorm')
         self.audio_dim = 768
        
-        ast_weight = torch.load('./pretrained_weights/audioset_10_10_0.4593.pth',map_location='cpu')
+        ast_weight = torch.load('/tmp/vast/pretrained_weights/audioset_10_10_0.4593.pth',map_location='cpu')
         audio_weight = {}
         audio_weight['audio_embeddings.cls_token']  = ast_weight['module.v.cls_token'] 
         audio_weight['audio_embeddings.distill_token']  = ast_weight['module.v.dist_token'] 
@@ -324,27 +324,27 @@ class MMGeneralModule(nn.Module):
             from .vision_encoders.evaclip import create_model
             if  self.config.vision_encoder_type == 'evaclip02_base':
                 model_name = "EVA02-CLIP-B-16" 
-                pretrained = "./pretrained_weights/clip/EVA02_CLIP_B_psz16_s8B.pt" 
+                pretrained = "/tmp/vast/pretrained_weights/clip/EVA02_CLIP_B_psz16_s8B.pt" 
                 self.vision_dim = 768
                 
             elif self.config.vision_encoder_type == 'evaclip02_base_self':
                 model_name = "EVA02-CLIP-B-16" 
-                pretrained = "./pretrained_weights/clip/EVA02_B_psz14to16.pt"
+                pretrained = "/tmp/vast/pretrained_weights/clip/EVA02_B_psz14to16.pt"
                 self.vision_dim = 768
 
             elif self.config.vision_encoder_type == 'evaclip02_large':
                 model_name = "EVA02-CLIP-L-14" 
-                pretrained = "./pretrained_weights/clip/EVA02_CLIP_L_psz14_s4B.pt"
+                pretrained = "/tmp/vast/pretrained_weights/clip/EVA02_CLIP_L_psz14_s4B.pt"
                 self.vision_dim = 1024
 
             elif self.config.vision_encoder_type == 'evaclip02_bige':
                 model_name = "EVA02-CLIP-bigE-14-plus" 
-                pretrained = "./pretrained_weights/clip/EVA02_CLIP_E_psz14_plus_s9B.pt" 
+                pretrained = "/tmp/vast/pretrained_weights/clip/EVA02_CLIP_E_psz14_plus_s9B.pt" 
                 self.vision_dim = 1792
 
             elif self.config.vision_encoder_type == 'evaclip01_giant':
                 model_name = "EVA01-CLIP-g-14" 
-                pretrained = "./pretrained_weights/clip/EVA01_CLIP_g_14_psz14_s11B.pt"
+                pretrained = "/tmp/vast/pretrained_weights/clip/EVA01_CLIP_g_14_psz14_s11B.pt"
                 self.vision_dim = 1408
             
 
@@ -359,13 +359,13 @@ class MMGeneralModule(nn.Module):
             from .vision_encoders.clip.clip import build_model
             from .vision_encoders.clip.clip import Transformer
             if  self.config.vision_encoder_type == 'clip_vit_base_16':
-                clip_weight = torch.jit.load('./pretrained_weights/clip/ViT-B-16.pt', map_location='cpu')
+                clip_weight = torch.jit.load('/tmp/vast/pretrained_weights/clip/ViT-B-16.pt', map_location='cpu')
                 self.vision_dim = 768
             elif self.config.vision_encoder_type == 'clip_vit_large_14_336px':
-                clip_weight = torch.jit.load('./pretrained_weights/clip/ViT-L-14-336px.pt', map_location='cpu')
+                clip_weight = torch.jit.load('/tmp/vast/pretrained_weights/clip/ViT-L-14-336px.pt', map_location='cpu')
                 self.vision_dim = 1024
             elif self.config.vision_encoder_type == 'clip_vit_base_32':
-                clip_weight = torch.jit.load('./pretrained_weights/clip/ViT-B-32.pt', map_location='cpu')
+                clip_weight = torch.jit.load('/tmp/vast/pretrained_weights/clip/ViT-B-32.pt', map_location='cpu')
                 self.vision_dim = 768
             clip_weight = clip_weight.state_dict()
 
@@ -530,12 +530,12 @@ class MMGeneralModule(nn.Module):
         from .vision_encoders.swin.swin_config import get_config
 
         if self.config.vision_encoder_type.startswith('swin_base_22k_224'):
-            swin_config = get_config('./pretrained_weights/swin/swin_base_patch4_window7_224_22k.yaml')
-            swin_weight = torch.load('./pretrained_weights/swin/swin_base_patch4_window7_224_22k.pth', map_location='cpu')['model']
+            swin_config = get_config('/tmp/vast/pretrained_weights/swin/swin_base_patch4_window7_224_22k.yaml')
+            swin_weight = torch.load('/tmp/vast/pretrained_weights/swin/swin_base_patch4_window7_224_22k.pth', map_location='cpu')['model']
             self.vision_dim=1024
         elif self.config.vision_encoder_type.startswith('swin_large_22k_224'):
-            swin_config = get_config('./pretrained_weights/swin/swin_large_patch4_window7_224_22k.yaml')
-            swin_weight = torch.load('./pretrained_weights/swin/swin_large_patch4_window7_224_22k.pth', map_location='cpu')['model']
+            swin_config = get_config('/tmp/vast/pretrained_weights/swin/swin_large_patch4_window7_224_22k.yaml')
+            swin_weight = torch.load('/tmp/vast/pretrained_weights/swin/swin_large_patch4_window7_224_22k.pth', map_location='cpu')['model']
             self.vision_dim=1536
 
         model_type = swin_config.MODEL.TYPE

@@ -1218,7 +1218,7 @@ class BEATs(nn.Module):
 
 
 if __name__=='__main__':
-    checkpoint = torch.load('./pretrained_weights/BEATs_iter3_plus_AS2M.pt')
+    checkpoint = torch.load('/tmp/vast/pretrained_weights/BEATs_iter3_plus_AS2M.pt')
     cfg = BEATsConfig(checkpoint['cfg'])
     BEATs_model = BEATs(cfg)
     BEATs_model.load_state_dict(checkpoint['model'])

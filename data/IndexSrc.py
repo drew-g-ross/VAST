@@ -77,7 +77,7 @@ class ArgClass:
         from transformers import BertTokenizer
 
 
-        self.tokenizer = BertTokenizer.from_pretrained('./pretrained_weights/bert/bert-base-uncased')
+        self.tokenizer = BertTokenizer.from_pretrained('/tmp/vast/pretrained_weights/bert/bert-base-uncased')
         
 
     def process(self, item):

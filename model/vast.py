@@ -59,10 +59,10 @@ class VAST(MMGeneralModule):
         
         from .text_encoders.bert.bert import BertForMaskedLM, BertConfig
      
-        bertconfig = BertConfig.from_pretrained("./pretrained_weights/bert/bert-base-uncased")
+        bertconfig = BertConfig.from_pretrained("/tmp/vast/pretrained_weights/bert/bert-base-uncased")
         bertconfig.add_cross_attention = True
         bertconfig.is_decoder = True
-        self.multimodal_encoder = BertForMaskedLM.from_pretrained("./pretrained_weights/bert/bert-base-uncased",config = bertconfig )
+        self.multimodal_encoder = BertForMaskedLM.from_pretrained("/tmp/vast/pretrained_weights/bert/bert-base-uncased",config = bertconfig )
         self.multimodal_dim = 768
 
         if self.config.checkpointing:
@@ -71,7 +71,7 @@ class VAST(MMGeneralModule):
         from transformers import BertTokenizer
 
 
-        self.multimodal_encoder.tokenizer = BertTokenizer.from_pretrained('./pretrained_weights/bert/bert-base-uncased')
+        self.multimodal_encoder.tokenizer = BertTokenizer.from_pretrained('/tmp/vast/pretrained_weights/bert/bert-base-uncased')
         self.multimodal_encoder.tokenizer.bos_token_id = self.multimodal_encoder.tokenizer.convert_tokens_to_ids(['[CLS]'])[0]
         self.multimodal_encoder.tokenizer.eos_token_id = self.multimodal_encoder.tokenizer.convert_tokens_to_ids(['[SEP]'])[0]
         self.multimodal_encoder.tokenizer.pad_token_id = self.multimodal_encoder.tokenizer.convert_tokens_to_ids(['[PAD]'])[0]
