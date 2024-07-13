@@ -3,7 +3,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from data.loader import  MetaLoader, PrefetchLoader
 from data import data_registry
-from utils.distributed import DistributedSampler_wopadding
+from util.distributed import DistributedSampler_wopadding
 from .logger import LOGGER
 
 

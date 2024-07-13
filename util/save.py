@@ -1,7 +1,7 @@
 import os
 import torch
 from os.path import join
-from utils.logger import LOGGER
+from util.logger import LOGGER
 
 
 

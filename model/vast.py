@@ -7,13 +7,13 @@ import numpy as np
 import torch.nn as nn
 import torch.distributed as dist
 import torch.nn.functional as F
-from utils.logger import LOGGER
+from util.logger import LOGGER
 from .general_module import TokenMasker, MMGeneralModule, Contra_head, Match_head
-from utils.distributed import all_gather_with_grad, concat_all_gather, all_gather_list
+from util.distributed import all_gather_with_grad, concat_all_gather, all_gather_list
 from torch.nn import LayerNorm as LayerNorm
 from easydict import EasyDict as edict
 import decord
-from utils.tool import split
+from util.tool import split
 from torchvision.transforms.transforms import *
 
 class VAST(MMGeneralModule):

@@ -6,7 +6,7 @@ import numpy as np
 import torch.nn.functional as F
 from easydict import EasyDict as edict
 from torch.nn import LayerNorm as LayerNorm
-from utils.logger import LOGGER
+from util.logger import LOGGER
 
 def gelu(x):
     """Implementation of the gelu activation function.
