@@ -15,7 +15,7 @@ from .openai import load_openai_model
 from .pretrained import is_pretrained_cfg, get_pretrained_cfg, download_pretrained, list_pretrained_tags_by_model
 from .transform import image_transform
 from .tokenizer import HFTokenizer, tokenize
-from .vast_utilss import resize_clip_pos_embed, resize_evaclip_pos_embed, resize_visual_pos_embed, resize_eva_pos_embed
+from .vast_utils import resize_clip_pos_embed, resize_evaclip_pos_embed, resize_visual_pos_embed, resize_eva_pos_embed
 
 
 _MODEL_CONFIG_PATHS = [Path(__file__).parent / f"model_configs/"]
