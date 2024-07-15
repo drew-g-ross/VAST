@@ -14,7 +14,7 @@ from torch.nn import functional as F
 #     from timm.layers import trunc_normal_
     
 from .rope import VisionRotaryEmbedding, VisionRotaryEmbeddingFast
-from .vast_utilss import to_2tuple
+from .utils import to_2tuple
 
 if os.getenv('ENV_TYPE') == 'deepspeed':
     try:
