@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 import torch.distributed as dist
 from easydict import EasyDict as edict
-from util.logger import LOGGER
+from vast_utils.logger import LOGGER
 
 
 def parse_with_config(parser):
