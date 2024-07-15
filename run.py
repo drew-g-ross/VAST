@@ -2,14 +2,17 @@ import os
 import json
 import torch
 import torch.distributed as dist
-from utils.args import get_args,logging_cfgs
-from utils.initialize import initialize
-from utils.build_model import build_model
-from utils.build_optimizer import build_optimizer 
-from utils.build_dataloader import create_train_dataloaders, create_val_dataloaders
-from utils.pipeline import train, test
+from vast_utils.args import get_args,logging_cfgs
+from vast_utils.initialize import initialize
+from vast_utils.build_model import build_model
+from vast_utils.build_optimizer import build_optimizer 
+from vast_utils.build_dataloader import create_train_dataloaders, create_val_dataloaders
+from vast_utils.pipeline import train, test
 
-
+os.environ['WORLD_SIZE'] = '1'
+os.environ['RANK'] = '0'
+os.environ['MASTER_ADDR'] = 'localhost'
+os.environ['MASTER_PORT'] = '9834'
 def main():
 
     ### init 
@@ -35,10 +38,11 @@ def main():
 
 
         ### start evaluation
-        if args.run_cfg.first_eval or args.run_cfg.zero_shot:
-            test(model, val_loaders, args.run_cfg)                                 
-            if args.run_cfg.zero_shot:
-                return 
+        # if args.run_cfg.first_eval or args.run_cfg.zero_shot:
+        #     test(model, val_loaders, args.run_cfg)  
+        #     print("SUCCESSFULLY TESTED")                               
+        #     if args.run_cfg.zero_shot:
+        #         return 
 
         ### start training
 

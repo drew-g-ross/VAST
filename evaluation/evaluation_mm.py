@@ -10,9 +10,9 @@ from evaluation_tools.caption_tools.pycocoevalcap.eval import COCOEvalCap
 from evaluation_tools.caption_tools.pycocotools.coco import COCO
 from evaluation_tools.vqa_tools.vqa import VQA
 from evaluation_tools.vqa_tools.vqa_eval import VQAEval
-from util.logger import LOGGER
-from util.distributed import  all_gather_list, ddp_allgather
-from util.tool import NoOp
+from vast_utils.logger import LOGGER
+from vast_utils.distributed import  all_gather_list, ddp_allgather
+from vast_utils.tool import NoOp
 from easydict import EasyDict as edict
 
 

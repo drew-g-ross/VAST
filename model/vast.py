@@ -7,13 +7,13 @@ import numpy as np
 import torch.nn as nn
 import torch.distributed as dist
 import torch.nn.functional as F
-from util.logger import LOGGER
+from vast_utils.logger import LOGGER
 from .general_module import TokenMasker, MMGeneralModule, Contra_head, Match_head
-from util.distributed import all_gather_with_grad, concat_all_gather, all_gather_list
+from vast_utils.distributed import all_gather_with_grad, concat_all_gather, all_gather_list
 from torch.nn import LayerNorm as LayerNorm
 from easydict import EasyDict as edict
 import decord
-from util.tool import split
+from vast_utils.tool import split
 from torchvision.transforms.transforms import *
 
 class VAST(MMGeneralModule):
@@ -102,7 +102,7 @@ class VAST(MMGeneralModule):
         return vision_pixels.unsqueeze(0).to(torch.float).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     
     def get_vid_embeddings(self,video_path):
-        """Returns tensor of shape 1,512 of embeddings for this video.
+        """Returns len 512 list of floats of embeddings for this video.
         Taken from batch_get 'feat_v'"""
         # vision_pixels should be 5 dimensional: b,n,3,h,w = vision_pixels.shape
         # if only one ex, make sure b=1
@@ -114,7 +114,7 @@ class VAST(MMGeneralModule):
         return feat_v.squeeze().tolist()
     
     def get_cap_embeddings(self,raw_captions):
-        """Returns tensor of shape 1,512 of embeddings for this caption.
+        """Returns len 512 list of floats of embeddings for this caption.
         Taken from batch_get 'feat_t_vision_caption'"""
         caption_tokens = self.multimodal_encoder.tokenizer(raw_captions,
                                                     padding="max_length",

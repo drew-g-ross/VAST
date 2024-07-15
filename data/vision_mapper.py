@@ -7,8 +7,8 @@ import numpy as np
 import torch.nn.functional as F
 from torchvision.transforms.transforms import *
 from PIL import Image
-from util.logger import LOGGER
-from util.tool import split
+from vast_utils.logger import LOGGER
+from vast_utils.tool import split
 
 
 

@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 import math
-from util.logger import LOGGER
+from vast_utils.logger import LOGGER
 class Bottleneck(nn.Module):
     expansion = 4
 

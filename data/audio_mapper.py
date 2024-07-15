@@ -2,8 +2,8 @@ import os
 import random
 import torch
 import torchaudio
-from util.logger import LOGGER
-from util.tool import split
+from vast_utils.logger import LOGGER
+from vast_utils.tool import split
 
 
 class AudioMapper(object):

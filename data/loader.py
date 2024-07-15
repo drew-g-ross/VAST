@@ -1,7 +1,7 @@
 import random
 import torch
 from torch.utils.data import DataLoader
-from util.distributed import any_broadcast
+from vast_utils.distributed import any_broadcast
 from torch.utils.data.distributed import DistributedSampler
 
 

@@ -7,7 +7,7 @@ import numpy as np
 import torch.nn.functional as F
 from toolz.sandbox import unzip
 from torch.utils.data import Dataset
-from util.logger import LOGGER
+from vast_utils.logger import LOGGER
 from .vision_mapper import VisionMapper
 from .audio_mapper import AudioMapper
 
