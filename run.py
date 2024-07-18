@@ -9,10 +9,12 @@ from vast_utils.build_optimizer import build_optimizer
 from vast_utils.build_dataloader import create_train_dataloaders, create_val_dataloaders
 from vast_utils.pipeline import train, test
 
-os.environ['WORLD_SIZE'] = '1'
-os.environ['RANK'] = '0'
-os.environ['MASTER_ADDR'] = 'localhost'
-os.environ['MASTER_PORT'] = '9834'
+# UNCOMMENT FOR DEBUG / NOT USING torch.distributed
+# os.environ['WORLD_SIZE'] = '1'
+# os.environ['RANK'] = '0'
+# os.environ['MASTER_ADDR'] = 'localhost'
+# os.environ['MASTER_PORT'] = '9834'
+
 def main():
 
     ### init 

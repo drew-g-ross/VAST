@@ -44,20 +44,19 @@ def train(model, optimizer, train_loader, val_loaders, run_cfg, start_step=0, ve
                 loss_dict = model(batch, task=task, compute_loss=True)
                 loss = sum(list(loss_dict.values()))
                 loss_dict['total_loss'] = loss
-                loss_dict = {k:v.item() for k,v in loss_dict.items()}
+                # loss_dict = {k:v.item() for k,v in loss_dict.items()}
                 
         else:
             loss_dict = model(batch, task=task, compute_loss=True)
             loss = sum(list(loss_dict.values()))
             loss_dict['total_loss'] = loss
-            loss_dict = {k:v.item() for k,v in loss_dict.items()}
+            # loss_dict = {k:v.item() for k,v in loss_dict.items()}
             
-
-
-
-
-
-        
+        # clean loss_dict
+        for key in loss_dict:
+            if type(loss_dict[key]) == torch.Tensor:
+                loss_dict[key] = loss_dict[key].cpu().item()
+        torch.cuda.empty_cache()
 
 
         if not name in loss_moving_averagetors:
@@ -110,7 +109,12 @@ def train(model, optimizer, train_loader, val_loaders, run_cfg, start_step=0, ve
             optimizer.zero_grad()
         pbar.update(1)
 
-
+        # clean batch
+        loss = loss.cpu()
+        for key in batch:
+            if type(batch[key]) == torch.Tensor:
+                batch[key] = batch[key].cpu()
+        torch.cuda.empty_cache()
         
         if (global_step+1) % run_cfg.valid_steps == 0:
             eval_log = evaluate_fn(model, val_loaders, run_cfg, global_step)
