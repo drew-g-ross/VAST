@@ -15,6 +15,7 @@ from easydict import EasyDict as edict
 import decord
 from vast_utils.tool import split
 from torchvision.transforms.transforms import *
+from typing import List
 
 class VAST(MMGeneralModule):
     """ VLP pretraining """
@@ -85,37 +86,42 @@ class VAST(MMGeneralModule):
                         Resize((resolution,resolution)),
                         Normalize(mean,std)])
     
-    def _get_vision_pixels(self, video_path):
-        """Returns tensor of shape b,n,3,h,w which is generally 1,16,3,224,224
-        of the pixels of the raw_video at video_path. 
+    def _get_vision_pixels(self, video_paths):
+        """Returns tensor of shape batch,num_frames,3,h,w which is generally batch,16,3,224,224
+        of the pixels of the raw_video at each video_path. 
         Taken from vision_mapper read method (under 'raw_video' if statement)"""
-        sample_num = 16 # either 8 or 16
-        container = decord.VideoReader(video_path)     
-        frames_ids = list(range(len(container)))
-        frames_splited = split(frames_ids, sample_num)
-        sample_idx = [i[(len(i)+1)//2-1] for i in frames_splited] 
-        frames = container.get_batch(sample_idx).asnumpy()
-        vision_pixels = torch.from_numpy(frames.transpose(0,3,1,2)/255.0)  ### nX3xHxW
-        transform_fn = self._get_transform()
-        vision_pixels = transform_fn(vision_pixels)    
+        all_vision_pixels = []
+        sample_num = 16 # num frames to sample, either 8 or 16
+        for video_path in video_paths:
+            container = decord.VideoReader(video_path)     
+            frames_ids = list(range(len(container)))
+            frames_splited = split(frames_ids, sample_num)
+            sample_idx = [i[(len(i)+1)//2-1] for i in frames_splited] 
+            frames = container.get_batch(sample_idx).asnumpy()
+            vision_pixels = torch.from_numpy(frames.transpose(0,3,1,2)/255.0)  ### nX3xHxW
+            transform_fn = self._get_transform()
+            vision_pixels = transform_fn(vision_pixels)    
+            all_vision_pixels.append(vision_pixels)
 
-        return vision_pixels.unsqueeze(0).to(torch.float).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+        return torch.stack(all_vision_pixels, dim=0).to(torch.float).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
     
-    def get_vid_embeddings(self,video_path):
-        """Returns len 512 list of floats of embeddings for this video.
-        Taken from batch_get 'feat_v'"""
+    def get_vid_embeddings(self, video_paths: List[str]) -> List[List[float]]:
+        """Returns list of embeddings for each video. Embeddings are 512 dimensional.
+        Taken from batch_get 'feat_v'
+        """
         # vision_pixels should be 5 dimensional: b,n,3,h,w = vision_pixels.shape
         # if only one ex, make sure b=1
-        vision_pixels = self._get_vision_pixels(video_path)
+        vision_pixels = self._get_vision_pixels(video_paths)
         vision_output = self.forward_vision_encoder(vision_pixels)
         vision_output_pooled = self.pool_vision_for_contra(vision_output)
         feat_v = self.contra_head_v(vision_output_pooled)
         feat_v = F.normalize(feat_v,dim=-1)
-        return feat_v.squeeze().tolist()
+        return feat_v.tolist()
     
-    def get_cap_embeddings(self,raw_captions):
-        """Returns len 512 list of floats of embeddings for this caption.
-        Taken from batch_get 'feat_t_vision_caption'"""
+    def get_text_embeddings(self, raw_captions: List[str]) -> List[List[float]]:
+        """Returns list of embeddings for each caption. Embeddings are 512 dimensional.
+        Taken from batch_get 'feat_t_vision_caption' which is same as 'feat_t'
+        """
         caption_tokens = self.multimodal_encoder.tokenizer(raw_captions,
                                                     padding="max_length",
                                                     truncation=True,
@@ -129,7 +135,7 @@ class VAST(MMGeneralModule):
         caption_output_pooled = self.pool_text_for_contra(caption_output)
         feat_t = self.contra_head_t(caption_output_pooled) 
         feat_t = F.normalize(feat_t,dim=-1)
-        return feat_t.squeeze().tolist()
+        return feat_t.tolist()
 
     def batch_get(self, batch, key):
         if key in batch:

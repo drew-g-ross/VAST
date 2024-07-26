@@ -48,22 +48,26 @@ def _eval_similarity(model: vast.VAST, data: pd.DataFrame, metric: str, standard
     in data.
     """
     n = data.shape[0]
-    query_embeddings = []
-    val_embeddings = []
+    labels = []
+    video_paths = []
     for _, row in data.iterrows():
-        # get label embeddings
+        # get labels
         label = row[_CSV_LABEL_FIELD]
-        query_embeddings.append(model.get_cap_embeddings(label))
+        labels.append(label)
 
-        # get scene embeddings
+        # get scene video paths
         blob_id = row[_CSV_RUN_ID_FIELD]
         start_ts = row[_CSV_START_TIME_FIELD]
         end_ts = row[_CSV_END_TIME_FIELD]
         name = f"{blob_id}-{start_ts}-{end_ts}.mp4"
         path = f"/home/dross/videos/{name}"
-        print(f"calculating embeddings from video at {path}")
-
-        val_embeddings.append(model.get_vid_embeddings(path))
+        video_paths.append(path)
+    
+    # get embeddings
+    print(f"calculating {len(video_paths)} video embeddings")
+    val_embeddings = model.get_vid_embeddings(video_paths)
+    print(f"calculating {len(labels)} text embeddings")
+    query_embeddings = model.get_text_embeddings(labels)
 
     # get similarity matrix
     similarity = _get_similarity_matrix(np.array(val_embeddings),
@@ -90,6 +94,6 @@ def _eval_similarity(model: vast.VAST, data: pd.DataFrame, metric: str, standard
 
 if __name__ == "__main__":
     torch.cuda.empty_cache()
-    df = pd.read_csv("/home/dross/TSS_eval_small_manual.csv")
-    model = build_model.build_model_fn('./output/vast/pretrain_vast')
+    df = pd.read_csv("/home/dross/TSS_eval_small_manual.csv", delimiter="|")
+    model = build_model.build_model_fn('/home/dross/retrieval-train_all_pruned')
     _eval_similarity(model, df, MetricType.COS, True)
